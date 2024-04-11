@@ -81,6 +81,12 @@ SituationAssessor::SituationAssessor(const std::string& agent_name,
   perception_manager_.objects_manager_.setSimulation(simulate_);
 
   ros_sender_ = new ROSSender(&n_);
+  relation_sender_ = new RelationsSender(&n_,
+                                         agent_name,
+                                         &perception_manager_.objects_manager_,
+                                         &perception_manager_.humans_manager_,
+                                         &perception_manager_.robots_manager_);
+
   if(is_robot_)
   {
     objetcs_pose_sender_ = new PoseSender(&n_, perception_manager_.objects_manager_);
@@ -180,6 +186,7 @@ void SituationAssessor::assessmentLoop()
     start_time = std::chrono::high_resolution_clock::now();
 
     assess();
+    relation_sender_->posesUpdated();
 
     if(is_robot_)
       handleKeypress(bullet_client_, perception_manager_);
