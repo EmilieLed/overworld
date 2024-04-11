@@ -229,8 +229,15 @@ void ReasonerEgocentric::updateOntology(const std::vector<overworld::Triplet>& t
     auto branch = ontology_->individual_graph_.findBranch(triplet.subject);
     if(branch != nullptr)
     {
+      try
+    {
       ontology_->individual_graph_.addRelation(branch, triplet.predicate, triplet.object);
       nb_update_++;
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+      }
     }
   }
 }
