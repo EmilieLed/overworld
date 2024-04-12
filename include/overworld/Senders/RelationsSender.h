@@ -53,7 +53,7 @@ public:
 private:
   uint64_t frames_;
   std::unordered_map<std::string, ComputedRelations_t> last_use_;
-  std::unordered_map<std::string, Fact> last_facts_;
+  std::unordered_map<std::string, std::unordered_set<Fact>> last_facts_;// nul
 
   ros::ServiceServer get_relations_service_;
 
@@ -70,9 +70,9 @@ private:
   std::vector<ToCompute_t> shouldRecompute(const overworld::GetRelations::Request& request);
   bool shouldRecompute(const std::string& subject, ComputedRelation_t& computed_relation);
 
-  void computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response, bool deictic, bool intrinsic);
-  void computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response, bool deictic, bool intrinsic);
-  void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response);
+  void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
+
+  void filterTriplets(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
 
   bool shouldBeTested(Object* object);
   bool isNextTo(Object* object_a, Object* object_b);

@@ -192,7 +192,7 @@ void RelationsSender::computeRelationOnOne(const overworld::Triplet& pattern, ov
   }
 }
 
-void RelationsSender::computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response)
+void RelationsSender::computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin)
 {
   if(shouldBeTested(object_b) == false)
       return;
@@ -208,22 +208,54 @@ void RelationsSender::computeDeicticRelation(Object* object_a, Object* object_b,
       std::pair<double, double> u = {object_b->pose().getX() - object_a->pose().getX(),
                                       object_b->pose().getY() - object_a->pose().getY()};
 
-      double angle = atan2(u.second, u.first) - atan2(v.second, v.first); // [-pi, +pi]
+      double angle = atan2(u.second, u.first) - atan2(v.second, v.first); // [-2pi, +2pi]
 
       overworld::Triplet triplet;
       triplet.subject = object_b->id();
       triplet.object = object_a->id();
-      if((angle < M_PI_4) && (angle > -M_PI_4))
+      if (angle<0)
+        angle=2*M_PI+angle; // [0, +2pi]   
+      if((angle < M_PI_4) || (angle > 7*M_PI_4))  
         triplet.predicate = "isBehind";
       else if((angle <= 3*M_PI_4) && (angle >= M_PI_4))
         triplet.predicate = "isAtLeftOf";
-      else if((angle >= -3*M_PI_4) && (angle <= -M_PI_4))
+      else if((angle >= 5*M_PI_4) && (angle <= 7*M_PI_4))
         triplet.predicate = "isAtRightOf";
       else
         triplet.predicate = "isInFrontOf";
-      response.to_add.push_back(triplet);
+      filterTriplets(triplet,response,origin);
     }
   }
+}
+void RelationsSender::filterTriplets(const overworld::Triplet& triplet, overworld::GetRelations::Response& response,const std::string origin)
+{
+  Fact new_fact(triplet);
+
+  std::vector<overworld::Triplet> to_delete_temp;
+  bool already_exist = false;
+
+  for(const auto& fact : last_facts_[origin])
+  {
+    if (new_fact.useSameEntities(fact) && (new_fact.getPredicate() != fact.getPredicate()))
+      to_delete_temp.push_back(fact.toTriplet()); 
+    
+    if (new_fact == fact)
+      already_exist = true; 
+      
+  }
+
+  if(already_exist == false)
+  {
+    response.to_add.push_back(triplet);
+    last_facts_[origin].insert(new_fact);
+  }
+  for (auto triplet_i : to_delete_temp)
+  {
+    response.to_delete.push_back(triplet_i);
+    Fact fact_i(triplet_i);
+    last_facts_[origin].erase(fact_i);
+  }
+}
 }
 
 bool RelationsSender::shouldBeTested(Object* object)
