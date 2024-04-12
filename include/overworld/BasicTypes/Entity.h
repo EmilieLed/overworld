@@ -40,6 +40,7 @@ public:
     ros::Time lastStamp() const { return last_poses_.back().stamp; }
     bool hasMoved() const;
     bool hasMoved(const ros::Time& stamp) const;
+    bool hasMoved(const double distance) const;
 
     std::array<double, 3> computeTranslationSpeed() const;
 

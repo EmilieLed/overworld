@@ -126,6 +126,22 @@ bool Entity::hasMoved(const ros::Time& stamp) const
 
     return false;
 }
+bool Entity::hasMoved(const double distance) const //hasMoved but with a distance as parameter
+{
+    if (!is_located_)
+    {
+        throw UnlocatedEntityError(id_);
+    }
+    if (last_poses_.size() <= 1)
+    {
+        return true;
+    }
+
+    if(pose().similarTo(last_poses_.at(last_poses_.size() - 2).pose, distance, 0.00349066) == false) // 5mm // 0.2 degree// 0.5degree = 0.00872665
+        return true;
+
+    return false;
+}
 
 
 std::array<double, 3> Entity::computeTranslationSpeed() const
