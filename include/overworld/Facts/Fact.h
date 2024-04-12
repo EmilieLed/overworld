@@ -3,6 +3,7 @@
 
 #include <string>
 #include <functional>
+#include "overworld/Triplet.h"
 
 namespace owds {
 
@@ -14,6 +15,13 @@ public:
        const std::string& object) : subject_(subject),
                                     predicate_(predicate),
                                     object_(object)
+  {
+    hash_ = std::hash<std::string>{}(toString());
+  }
+
+  Fact(const overworld::Triplet& triplet): subject_(triplet.subject),
+                                           predicate_(triplet.predicate),
+                                           object_(triplet.object)
   {
     hash_ = std::hash<std::string>{}(toString());
   }
@@ -32,10 +40,24 @@ public:
   {
     return hash_ < other.hash_;
   }
+  bool useSameEntities(const Fact& other) const
+  {
+    return ((subject_ == other.subject_) &&
+            (object_ == other.object_));
+  }
 
   std::string toString(const std::string& delim = " ") const
   {
     return subject_ + delim + predicate_ + delim + object_;
+  }
+
+  overworld::Triplet toTriplet()const 
+{
+  overworld::Triplet triplet;
+  triplet.subject = subject_;
+  triplet.predicate = predicate_;
+  triplet.object = object_;
+  return triplet;
   }
 
 private:
