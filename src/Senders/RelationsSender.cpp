@@ -49,12 +49,13 @@ bool RelationsSender::onGetRelationService(overworld::GetRelations::Request& req
   if(agent_ == nullptr)
     return true;
 
+  initOrigin(request);
   std::vector<ToCompute_t> should_compute = shouldRecompute(request);
   for(size_t i = 0; i < should_compute.size(); i++)
   {
     if(should_compute[i].subject == "")
     {
-      computeRelationOnAll(request.patterns[i], response,
+      computeRelationOnAll(request.patterns[i], response,request.origin_id,
                            (should_compute[i].deitic_relation || should_compute[i].egocentric_relation),
                            (should_compute[i].intrinsic_relation || should_compute[i].egocentric_relation));
       
@@ -67,7 +68,7 @@ bool RelationsSender::onGetRelationService(overworld::GetRelations::Request& req
     }
     else
     {
-      computeRelationOnAll(request.patterns[i], response,
+      computeRelationOnOne(request.patterns[i], response,request.origin_id,
                            (should_compute[i].deitic_relation || should_compute[i].egocentric_relation),
                            (should_compute[i].intrinsic_relation || should_compute[i].egocentric_relation));
       if(should_compute[i].deitic_relation)
@@ -82,18 +83,21 @@ bool RelationsSender::onGetRelationService(overworld::GetRelations::Request& req
   return true;
 }
 
-std::vector<ToCompute_t> RelationsSender::shouldRecompute(const overworld::GetRelations::Request& request)
+void RelationsSender::initOrigin(const overworld::GetRelations::Request& request)
 {
   auto it = last_use_.find(request.origin_id);
   if(it == last_use_.end())
   {
     last_use_[request.origin_id] = ComputedRelations_t();
-    return std::vector<ToCompute_t>(request.patterns.size(), true);
+    last_facts_[request.origin_id] = {};
+    
   }
-  else if(it->second.last_use + DELTA_FRAME < frames_)
-    return std::vector<ToCompute_t>(request.patterns.size(), true);
-  else
-  {
+}
+
+std::vector<ToCompute_t> RelationsSender::shouldRecompute(const overworld::GetRelations::Request& request)
+{
+  auto it = last_use_.find(request.origin_id);
+  if(it == last_use_.end()) return std::vector<ToCompute_t>(request.patterns.size(), true); //voir si necessaire
     std::vector<ToCompute_t> res;
     for(auto& pattern : request.patterns)
     {
@@ -146,7 +150,7 @@ bool RelationsSender::shouldRecompute(const std::string& subject, ComputedRelati
     return false;
 }
 
-void RelationsSender::computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response, bool deictic, bool intrinsic)
+void RelationsSender::computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic)
 {
   if(agent_->isLocated() == false)
     return;
@@ -158,16 +162,11 @@ void RelationsSender::computeRelationOnAll(const overworld::Triplet& pattern, ov
       continue;
 
     std::cout << "test all " << object_a_it->first << std::endl;
-
-    for(auto object_b_it = std::next(object_a_it); object_b_it != objects.end(); ++object_b_it)
-    {
-      if(deictic)
-        computeDeicticRelation(object_a_it->second, object_b_it->second, response);
-    }
+    computeOneRelation(object_a_it->second,response,origin_id,deictic,intrinsic);
   }
 }
 
-void RelationsSender::computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response, bool deictic, bool intrinsic)
+void RelationsSender::computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic)
 {
   if(agent_->isLocated() == false)
     return;
@@ -181,13 +180,26 @@ void RelationsSender::computeRelationOnOne(const overworld::Triplet& pattern, ov
     return;
 
   std::cout << "test one" << ref_object_it->first << std::endl;
-
-  for(auto object_it = objects.begin(); object_it != objects.end(); ++object_it)
+  computeOneRelation(ref_object_it->second,response,origin_id,deictic,intrinsic);
+}
+void RelationsSender::computeOneRelation(Object* object_a, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic)
+{
+  shouldBeTested(object_a);
+  std::cout << "test one" << object_a<< std::endl;
+  auto objects = objects_manager_->getEntities();
+    for(auto object_b = objects.begin(); object_b != objects.end(); ++object_b) //for all b
   {
-    if(ref_object_it != object_it)
+    if(object_a != object_b->second) 
     {
       if(deictic)
+      { 
+        computeDeicticRelation(object_a, object_b->second, response,origin_id);
         computeDeicticRelation(ref_object_it->second, object_it->second, response);
+      }
+      else if(intrinsic)
+        continue;
+
+      else continue;
     }
   }
 }
