@@ -49,13 +49,17 @@ bool RelationsSender::onGetRelationService(overworld::GetRelations::Request& req
   if(agent_ == nullptr)
     return true;
 
+  bool first_it=true;
   initOrigin(request);
+  if (last_facts_.at(request.origin_id).empty())
+    bool first_it=true;
   std::vector<ToCompute_t> should_compute = shouldRecompute(request);
   for(size_t i = 0; i < should_compute.size(); i++)
   {
     if(should_compute[i].subject == "")
     {
       computeRelationOnAll(request.patterns[i], response,request.origin_id,
+      computeRelationOnAll(request.patterns[i], response,request.origin_id,first_it,
                            (should_compute[i].deitic_relation || should_compute[i].egocentric_relation),
                            (should_compute[i].intrinsic_relation || should_compute[i].egocentric_relation));
       
@@ -68,7 +72,7 @@ bool RelationsSender::onGetRelationService(overworld::GetRelations::Request& req
     }
     else
     {
-      computeRelationOnOne(request.patterns[i], response,request.origin_id,
+      computeRelationOnOne(request.patterns[i], response,request.origin_id,first_it,
                            (should_compute[i].deitic_relation || should_compute[i].egocentric_relation),
                            (should_compute[i].intrinsic_relation || should_compute[i].egocentric_relation));
       if(should_compute[i].deitic_relation)
@@ -150,10 +154,14 @@ bool RelationsSender::shouldRecompute(const std::string& subject, ComputedRelati
     return false;
 }
 
-void RelationsSender::computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic)
+void RelationsSender::computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic)
 {
   if(agent_->isLocated() == false)
+    { 
+    std::cout << "agent not located" << std::endl;
     return;
+    }
+  if (!last_facts_.at(origin_id).empty()) first_it=false;
 
   auto objects = objects_manager_->getEntities();
   for(auto object_a_it = objects.begin(); object_a_it != objects.end(); ++object_a_it)
@@ -162,14 +170,17 @@ void RelationsSender::computeRelationOnAll(const overworld::Triplet& pattern, ov
       continue;
 
     std::cout << "test all " << object_a_it->first << std::endl;
-    computeOneRelation(object_a_it->second,response,origin_id,deictic,intrinsic);
+    computeOneRelation(object_a_it->second,response,origin_id,first_it,deictic,intrinsic);
   }
 }
 
-void RelationsSender::computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic)
+void RelationsSender::computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic)
 {
   if(agent_->isLocated() == false)
+    {
+    std::cout << "agent not located" << std::endl;
     return;
+    }
 
   auto objects = objects_manager_->getEntities();
   auto ref_object_it = objects.find(pattern.subject);
@@ -180,9 +191,9 @@ void RelationsSender::computeRelationOnOne(const overworld::Triplet& pattern, ov
     return;
 
   std::cout << "test one" << ref_object_it->first << std::endl;
-  computeOneRelation(ref_object_it->second,response,origin_id,deictic,intrinsic);
+  computeOneRelation(ref_object_it->second,response,origin_id,first_it,deictic,intrinsic);
 }
-void RelationsSender::computeOneRelation(Object* object_a, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic)
+void RelationsSender::computeOneRelation(Object* object_a, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic)
 {
   shouldBeTested(object_a);
   std::cout << "test one" << object_a<< std::endl;
@@ -194,7 +205,8 @@ void RelationsSender::computeOneRelation(Object* object_a, overworld::GetRelatio
       if(deictic)
       { 
         computeDeicticRelation(object_a, object_b->second, response,origin_id);
-        computeDeicticRelation(ref_object_it->second, object_it->second, response);
+        // if (shouldBeTestedForDeictic(object_a, object_b->second,first_it))
+        //   computeDeicticRelation(object_a, object_b->second, response,origin_id);
       }
       else if(intrinsic)
         continue;
@@ -284,6 +296,37 @@ bool RelationsSender::shouldBeTested(Object* object)
     return false;
   else
     return true;
+}
+
+bool RelationsSender::shouldBeTestedForDeictic(Object* object_a, Object* object_b, bool first_it) //TODO: determiner les differents elements decidant si quelque chose doit etre tester ou pas
+{
+  if(first_it==false)
+    {
+    double min_dist;
+    if(shouldBeTested(object_b))
+      {
+        min_dist= object_a->getMinDistanceTo(*object_b); //TODO: decide on a relevant minimal distance
+        std::cout<<min_dist<<std::endl;
+        if (object_a->hasMoved(min_dist*0.25))
+        {
+          std::cout<<"go into shouldBeTestedForDeictic: object a hasMoved" <<std::endl;
+          return true;
+        }
+        else if(agent_->hasMoved())
+        {
+          std::cout<<"go into shouldBeTestedForDeictic: the agent hasMoved" <<std::endl;
+          return true;
+        }
+        else
+        {
+          std::cout<<"go into shouldBeTestedForDeictic (false): not enough movement" <<std::endl;
+          return false;
+        }
+      }
+    else return false;
+    }
+  
+  else return true;
 }
 
 bool RelationsSender::isNextTo(Object* object_a, Object* object_b)

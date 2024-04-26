@@ -71,14 +71,15 @@ private:
   std::vector<ToCompute_t> shouldRecompute(const overworld::GetRelations::Request& request);
   bool shouldRecompute(const std::string& subject, ComputedRelation_t& computed_relation);
 
-  void computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic);
-  void computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic);
-  void computeOneRelation(Object* object_a, overworld::GetRelations::Response& response,const std::string origin_id, bool deictic, bool intrinsic);
+  void computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
+  void computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
+  void computeOneRelation(Object* object_a, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
   void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
 
   void filterTriplets(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
 
   bool shouldBeTested(Object* object);
+  bool shouldBeTestedForDeictic(Object* object_a,Object* object_b, bool first_it);
   bool isNextTo(Object* object_a, Object* object_b);
   bool InOverlappingOnZ(Object* object_a, Object* object_b);
 };
