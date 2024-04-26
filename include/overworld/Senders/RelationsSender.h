@@ -77,6 +77,9 @@ private:
   void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
 
   void filterTriplets(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
+  bool isSameFactCrossed(const Fact& fact_a,const Fact& fact_b);
+  std::string getInversePredicate(const Fact& checked_fact) const; 
+  std::vector<overworld::Triplet> returnEquivalent(const overworld::Triplet& triplet,const std::string origin) const; 
 
   bool shouldBeTested(Object* object);
   bool shouldBeTestedForDeictic(Object* object_a,Object* object_b, bool first_it);

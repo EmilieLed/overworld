@@ -261,10 +261,21 @@ void RelationsSender::filterTriplets(const overworld::Triplet& triplet, overworl
   for(const auto& fact : last_facts_[origin])
   {
     if (new_fact.useSameEntities(fact) && (new_fact.getPredicate() != fact.getPredicate()))
+      {
       to_delete_temp.push_back(fact.toTriplet()); 
+        std::vector<overworld::Triplet> equivalent_delete=returnEquivalent(fact.toTriplet(),origin);
+        for(auto& triplet_i:equivalent_delete)
+          {to_delete_temp.push_back(triplet_i);
+      }
     
     if (new_fact == fact)
+      {
       already_exist = true; 
+      }
+    if (isSameFactCrossed(new_fact,fact)) //(ex: a LeftOf b = b RightOf a)
+      {
+        already_exist=true;
+      }
       
   }
 
@@ -280,6 +291,44 @@ void RelationsSender::filterTriplets(const overworld::Triplet& triplet, overworl
     last_facts_[origin].erase(fact_i);
   }
 }
+bool RelationsSender::isSameFactCrossed(const Fact& fact_a,const Fact& fact_b)
+{
+  return (fact_a.useSameEntitiesCrossed(fact_b) && getInversePredicate(fact_b)==fact_a.getPredicate());
+}
+
+std::string RelationsSender::getInversePredicate(const Fact& checked_fact) const
+{
+    if (checked_fact.getPredicate()=="isAtRightOf")
+      return "isAtLeftOf";
+    else if (checked_fact.getPredicate()=="isAtLeftOf")
+      return "isAtRightOf";
+    else if (checked_fact.getPredicate()=="isBehind")
+      return "isInFrontOf";
+    else if (checked_fact.getPredicate()=="isInFrontOf")
+      return "isBehind";
+    else 
+      return checked_fact.getPredicate();
+}
+
+std::vector<overworld::Triplet> RelationsSender::returnEquivalent(const overworld::Triplet& triplet,const std::string origin) const
+{
+  //pour un triplet, renvoie la liste de tout les triplets equivalents 
+  // On l'utilisera pour determiner si un triplet est necessaire (si un equivalant est déjà là, on peut ne pas l'ajouter)
+  //ou pour supprimer des triplets equivalent dun triplet devenu faux
+  
+  Fact checked_fact(triplet);
+  std::vector<overworld::Triplet> res;
+  for(const Fact &fact : last_facts_.at(origin))
+  {
+    if (checked_fact.useSameEntitiesCrossed(fact) && (getInversePredicate(fact)==checked_fact.getPredicate()))
+    {
+      res.push_back(fact.toTriplet());
+      
+    }
+    return res; 
+  }
+
+  return res;
 }
 
 bool RelationsSender::shouldBeTested(Object* object)
