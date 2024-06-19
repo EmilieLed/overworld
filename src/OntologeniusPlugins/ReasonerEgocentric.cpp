@@ -68,7 +68,12 @@ bool ReasonerEgocentric::preReason(const QueryInfo_t& query_info)
     }
 
     if(to_compute_properties.size() == 0)
+    {
+      if(property_ptr != nullptr)
       to_compute_properties.insert(property_ptr);
+      else
+        return false;
+    }
 
     auto srv = createRequest(query_info.subject, to_compute_properties, query_info.object);
 
