@@ -77,6 +77,7 @@ private:
   void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
 
   void filterTriplets(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
+  void clearFactBetweenTwoObjects(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
   bool isSameFactCrossed(const Fact& fact_a,const Fact& fact_b);
   std::string getInversePredicate(const Fact& checked_fact) const; 
   std::vector<overworld::Triplet> returnEquivalent(const overworld::Triplet& triplet,const std::string origin) const; 
@@ -84,7 +85,8 @@ private:
   bool shouldBeTested(Object* object);
   bool shouldBeTestedForDeictic(Object* object_a,Object* object_b, bool first_it);
   bool isNextTo(Object* object_a, Object* object_b);
-  bool InOverlappingOnZ(Object* object_a, Object* object_b);
+  bool isOverlappingOnZ(Object* object_a, Object* object_b);
+  bool overlapXY(const struct aabb_t& aabb_1, const struct aabb_t& aabb_2);
 };
 
 } // namespace owds
