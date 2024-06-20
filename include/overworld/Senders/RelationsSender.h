@@ -75,6 +75,7 @@ private:
   void computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
   void computeOneRelation(Object* object_a, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
   void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
+  void computeIntrinsicRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
 
   void filterTriplets(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
   void clearFactBetweenTwoObjects(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
@@ -84,6 +85,7 @@ private:
 
   bool shouldBeTested(Object* object);
   bool shouldBeTestedForDeictic(Object* object_a,Object* object_b, bool first_it);
+  bool shouldBeTestedForIntrinsic(Object* object_a,Object* object_b);
   bool isNextTo(Object* object_a, Object* object_b);
   bool isOverlappingOnZ(Object* object_a, Object* object_b);
   bool overlapXY(const struct aabb_t& aabb_1, const struct aabb_t& aabb_2);
