@@ -58,7 +58,7 @@ bool RelationsSender::onGetRelationService(overworld::GetRelations::Request& req
   {
     if(should_compute[i].subject == "")
     {
-      computeRelationOnAll(request.patterns[i], response,request.origin_id,
+      
       computeRelationOnAll(request.patterns[i], response,request.origin_id,first_it,
                            (should_compute[i].deitic_relation || should_compute[i].egocentric_relation),
                            (should_compute[i].intrinsic_relation || should_compute[i].egocentric_relation));
@@ -294,7 +294,7 @@ void RelationsSender::filterTriplets(const overworld::Triplet& triplet, overworl
         std::vector<overworld::Triplet> equivalent_delete=returnEquivalent(fact.toTriplet(),origin);
         for(auto& triplet_i:equivalent_delete)
           {to_delete_temp.push_back(triplet_i);
-    }
+          }
 
     
     if (new_fact == fact)
@@ -366,9 +366,7 @@ std::string RelationsSender::getInversePredicate(const Fact& checked_fact) const
 
 std::vector<overworld::Triplet> RelationsSender::returnEquivalent(const overworld::Triplet& triplet,const std::string origin) const
 {
-  //pour un triplet, renvoie la liste de tout les triplets equivalents 
-  // On l'utilisera pour determiner si un triplet est necessaire (si un equivalant est déjà là, on peut ne pas l'ajouter)
-  //ou pour supprimer des triplets equivalent dun triplet devenu faux
+
   
   Fact checked_fact(triplet);
   std::vector<overworld::Triplet> res;
