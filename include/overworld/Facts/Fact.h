@@ -46,6 +46,12 @@ public:
             (object_ == other.object_));
   }
 
+  bool useSameEntitiesCrossed(const Fact& other) const 
+  {
+    return ((subject_ == other.object_) &&
+            (object_ == other.subject_));
+  }
+
   std::string toString(const std::string& delim = " ") const
   {
     return subject_ + delim + predicate_ + delim + object_;
