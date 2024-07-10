@@ -89,7 +89,7 @@ bool RelationsSender::onGetRelationService(overworld::GetRelations::Request& req
   std::cout<<"Liste last_facts à la fin de OnGetRelationService:"<<std::endl;
   for(const auto& fact : last_facts_[request.origin_id])
     {
-      std::cout << fact.getSubject()<<fact.getPredicate()<<fact.getObject()<< std::endl;
+      std::cout << fact.getSubject()<<" "<<fact.getPredicate()<<" "<<fact.getObject()<< std::endl;
     }
   std::cout << "-----"<< std::endl;
   
@@ -219,7 +219,7 @@ void RelationsSender::computeOneRelation(Object* object_a, overworld::GetRelatio
 
       }
       else if(intrinsic)
-        continue;
+        computeIntrinsicRelation(object_a,object_b->second,response,origin_id);
 
       else continue;
     }
@@ -272,13 +272,33 @@ void RelationsSender::computeIntrinsicRelation(Object* object_a, Object* object_
       return;
 
   if(isOverlappingOnZ(object_a, object_b))
-  {
-    if(isNextTo(object_a, object_b))
+    if(overlapXY(object_a->getAabb(), object_b->getAabb()) == false)
+     if(isNextTo(object_a, object_b)){
+      
+      if (shouldBeTestedForIntrinsic(object_a,object_b))
     {
-    //TO DO
-    }
-  }
+        auto object_b_a= object_b->pose().transformIn(object_a->pose());
+        double angle = atan2(object_b_a.getY(), object_b_a.getX()); // [-pi, +pi]
+        if (angle < 0) { angle += 2 * M_PI; }
 
+        overworld::Triplet triplet;
+        triplet.subject = object_b->id();
+        triplet.object = object_a->id();
+        if((angle < M_PI_4) || (angle > 7*M_PI_4))  
+          triplet.predicate = "isAtTheFrontOf";
+        else if((angle <= 3*M_PI_4) && (angle >= M_PI_4))
+          triplet.predicate = "isToTheRightOf";
+        else if((angle >= 5*M_PI_4) && (angle <= 7*M_PI_4))
+          triplet.predicate = "isToTheLeftOf";
+        else
+          triplet.predicate = "isAtTheBack";
+        filterTripletsIntrinsic(triplet,response,origin);
+        return;
+
+    }
+
+    }     
+  clearFactBetweenTwoObjects(object_a,object_b,response,origin);
 }
 
 void RelationsSender::filterTriplets(const overworld::Triplet& triplet, overworld::GetRelations::Response& response,const std::string origin)
@@ -305,6 +325,7 @@ void RelationsSender::filterTriplets(const overworld::Triplet& triplet, overworl
         std::vector<overworld::Triplet> equivalent_delete=returnEquivalent(fact.toTriplet(),origin);
         for(auto& triplet_i:equivalent_delete)
           {to_delete_temp.push_back(triplet_i);
+          } 
     }
 
     
@@ -337,6 +358,39 @@ void RelationsSender::filterTriplets(const overworld::Triplet& triplet, overworl
     std::cout << "suppresion du triplet:" <<triplet_i.subject<<" "<<triplet_i.predicate<<" "<<triplet_i.object<< std::endl;
   }
   }
+void RelationsSender::filterTripletsIntrinsic(const overworld::Triplet& triplet, overworld::GetRelations::Response& response,const std::string origin)
+{
+  Fact new_fact(triplet);
+  std::vector<overworld::Triplet> to_delete_temp;
+  bool already_exist = false;
+  for(const auto& fact : last_facts_[origin])
+  {
+    if (new_fact.useSameEntities(fact) && (new_fact.getPredicate() != fact.getPredicate()))
+      {
+        to_delete_temp.push_back(fact.toTriplet()); 
+        std::vector<overworld::Triplet> equivalent_delete=returnEquivalent(fact.toTriplet(),origin);
+        for(auto& triplet_i:equivalent_delete)
+          {to_delete_temp.push_back(triplet_i);
+          }
+      }
+    if (new_fact == fact)
+      {
+        already_exist = true; 
+        std::cout<<"fact existe déjà"<< std::endl;                                                                                                           
+      }
+  }
+
+  if(already_exist == false)
+  {
+    response.to_add.push_back(triplet);
+    last_facts_[origin].insert(new_fact);
+  }
+  for (auto triplet_i : to_delete_temp)
+  {
+    response.to_delete.push_back(triplet_i);
+    Fact fact_i(triplet_i);
+    last_facts_[origin].erase(fact_i);
+      }
 }
 
 
@@ -452,8 +506,13 @@ bool RelationsSender::shouldBeTestedForDeictic(Object* object_a, Object* object_
 bool RelationsSender::shouldBeTestedForIntrinsic(Object* object_a, Object* object_b) //Definir les tests préléminaires aux test intrinseques 
 {
   //est ce qu'objet_a a un sens canonique ? 
+  if (object_a->isA("CanonicObject"))
+  {
+  if ((std::abs(object_a->pose().getPitch()) <= 0.35) && (std::abs(object_a->pose().getYaw()) <= 0.35))  //0.35 rad = 20° On échange Roll et Yaw pour le moment
+    return true;
 
-  //est t'il disposé de maniere a respecter son sens canonique? Laisser une marge
+  }
+  else return false;
 
 return false;
 

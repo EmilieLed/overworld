@@ -78,6 +78,7 @@ private:
   void computeIntrinsicRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
 
   void filterTriplets(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
+  void filterTripletsIntrinsic(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
   void clearFactBetweenTwoObjects(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
   bool isSameFactCrossed(const Fact& fact_a,const Fact& fact_b);
   std::string getInversePredicate(const Fact& checked_fact) const; 
