@@ -14,6 +14,7 @@
 #include "overworld/Senders/ROSSender.h"
 #include "overworld/Senders/PoseSender.h"
 #include "overworld/Senders/Bernie.h"
+#include "overworld/Senders/RelationsSender.h"
 #include "overworld/Facts/FactsCalculator.h"
 #include "overworld/Facts/Publisher/OntologeniusFactsPublisher.h"
 
@@ -93,6 +94,7 @@ private:
   ROSSender* ros_sender_;
   PoseSender* objetcs_pose_sender_;
   BernieSenders* bernie_sender_;
+  RelationsSender* relation_sender_;
 
   std::map<std::string, HumanAssessor_t> humans_assessors_;
 

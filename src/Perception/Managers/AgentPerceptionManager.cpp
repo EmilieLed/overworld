@@ -12,11 +12,16 @@ AgentPerceptionManager::~AgentPerceptionManager()
   agents_.clear();
 }
 
-Agent* AgentPerceptionManager::getAgent(const std::string& agent_name, AgentType_e type)
+Agent* AgentPerceptionManager::getAgent(const std::string& agent_name, AgentType_e type, bool auto_create)
 {
   auto it = agents_.find(agent_name);
   if(it == agents_.end())
+  {
+    if(auto_create)
     it = createAgent(agent_name, type);
+    else
+      return nullptr;
+  }
 
   return it->second;
 }

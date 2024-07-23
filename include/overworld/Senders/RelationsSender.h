@@ -53,7 +53,7 @@ public:
 private:
   uint64_t frames_;
   std::unordered_map<std::string, ComputedRelations_t> last_use_;
-  std::unordered_map<std::string, Fact> last_facts_;
+  std::unordered_map<std::string, std::unordered_set<Fact>> last_facts_;// nul
 
   ros::ServiceServer get_relations_service_;
 
@@ -67,16 +67,29 @@ private:
 
   bool onGetRelationService(overworld::GetRelations::Request& request,
                             overworld::GetRelations::Response& response);
+  void initOrigin(const overworld::GetRelations::Request& request);
   std::vector<ToCompute_t> shouldRecompute(const overworld::GetRelations::Request& request);
   bool shouldRecompute(const std::string& subject, ComputedRelation_t& computed_relation);
 
-  void computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response, bool deictic, bool intrinsic);
-  void computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response, bool deictic, bool intrinsic);
-  void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response);
+  void computeRelationOnAll(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
+  void computeRelationOnOne(const overworld::Triplet& pattern, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
+  void computeOneRelation(Object* object_a, overworld::GetRelations::Response& response,const std::string origin_id,bool first_it, bool deictic, bool intrinsic);
+  void computeDeicticRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
+  void computeIntrinsicRelation(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
+
+  void filterTriplets(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
+  void filterTripletsIntrinsic(const overworld::Triplet& triplet,overworld::GetRelations::Response& response,const std::string origin);
+  void clearFactBetweenTwoObjects(Object* object_a, Object* object_b, overworld::GetRelations::Response& response,const std::string origin);
+  bool isSameFactCrossed(const Fact& fact_a,const Fact& fact_b);
+  std::string getInversePredicate(const Fact& checked_fact) const; 
+  std::vector<overworld::Triplet> returnEquivalent(const overworld::Triplet& triplet,const std::string origin) const; 
 
   bool shouldBeTested(Object* object);
+  bool shouldBeTestedForDeictic(Object* object_a,Object* object_b, bool first_it);
+  bool shouldBeTestedForIntrinsic(Object* object_a,Object* object_b);
   bool isNextTo(Object* object_a, Object* object_b);
-  bool InOverlappingOnZ(Object* object_a, Object* object_b);
+  bool isOverlappingOnZ(Object* object_a, Object* object_b);
+  bool overlapXY(const struct aabb_t& aabb_1, const struct aabb_t& aabb_2);
 };
 
 } // namespace owds

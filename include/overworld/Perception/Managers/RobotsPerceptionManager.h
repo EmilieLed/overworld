@@ -11,7 +11,7 @@ public:
   explicit RobotsPerceptionManager(ros::NodeHandle* nh): AgentPerceptionManager(nh){}
   ~RobotsPerceptionManager() {}
 
-  Agent* getAgent(const std::string& agent_name) { return AgentPerceptionManager::getAgent(agent_name, AgentType_e::ROBOT); }
+  Agent* getAgent(const std::string& agent_name, bool auto_create = true) { return AgentPerceptionManager::getAgent(agent_name, AgentType_e::ROBOT, auto_create); }
 
 private:
   void getPercepts( std::map<std::string, BodyPart>& percepts) override;

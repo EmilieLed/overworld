@@ -10,7 +10,7 @@ class HumansPerceptionManager : public AgentPerceptionManager
 public:
   explicit HumansPerceptionManager(ros::NodeHandle* nh): AgentPerceptionManager(nh){}
   
-  Agent* getAgent(const std::string& agent_name) { return AgentPerceptionManager::getAgent(agent_name, AgentType_e::HUMAN); }
+  Agent* getAgent(const std::string& agent_name, bool auto_create = true) { return AgentPerceptionManager::getAgent(agent_name, AgentType_e::HUMAN, auto_create); }
 
 private:
   void getPercepts( std::map<std::string, BodyPart>& percepts) override;

@@ -92,8 +92,8 @@
 
         <h1 class="title">Make it spawn</h1>
 
-        <p>Now that we have a way to link entities with some of their visual features, we just have to declare the entities to be loaded and their location.
-           To do so, we will create a new configuration file dedicated to the static entities and we will use a new perception module.
+        <p>Now that we have a way to link entities with some of their visual features, we just have to declare the entities to be loaded with their location and scale.
+           To do so, we will create a new configuration file dedicated to the static entities and we will use a new perception module. 
         </p>
 
         <h2>Setting the objects' location</h2>
@@ -112,6 +112,10 @@
           <div class="code_line">    <span class="yaml_key">x</span>: <span class="yaml_value">0.0</span></div>
           <div class="code_line">    <span class="yaml_key">y</span>: <span class="yaml_value">0.0</span></div>
           <div class="code_line">    <span class="yaml_key">z</span>: <span class="yaml_value">0.0</span></div>
+          <div class="code_line">  <span class="yaml_key">scale</span>:</div>
+          <div class="code_line">    <span class="yaml_key">x</span>: <span class="yaml_value">1.0</span></div>
+          <div class="code_line">    <span class="yaml_key">y</span>: <span class="yaml_value">1.0</span></div>
+          <div class="code_line">    <span class="yaml_key">z</span>: <span class="yaml_value">1.0</span></div>
           <div class="code_line">    </div>
           <div class="code_line"><span class="yaml_key">frame_stl</span>:</div>
           <div class="code_line">  <span class="yaml_key">position</span>:</div>
@@ -120,6 +124,8 @@
           <div class="code_line"><span class="yaml_key">frame_green</span>:</div>
           <div class="code_line">  <span class="yaml_key">position</span>:</div>
           <div class="code_line">    <span class="yaml_key">y</span>: <span class="yaml_value">2.0</span></div>
+          <div class="code_line">  <span class="yaml_key">scale</span>:</div>
+          <div class="code_line">    <span class="yaml_key">z</span>: <span class="yaml_value">3.0</span></div>
           <div class="code_line">    </div>
           <div class="code_line"><span class="yaml_key">frame_red</span>:</div>
           <div class="code_line">  <span class="yaml_key">position</span>:</div>
@@ -131,16 +137,42 @@
            These names are exactly the same as the ones described in the ontology.
         </p>
 
-        <p>Bellow each individual, we find two possible keys being "position" to describe translation, and "orientation" to describe rotations.
+        <p>Bellow each individual, we find three possible keys being "position" to describe translation,"orientation" to describe rotations and "scale" to define the size.
            Each of them can have three fields for their x, y, and z components.
-           To avoid too long files, all undefined fields are assigned to zero by default.
+           To avoid too long files, all undefined fields are assigned to zero by default, apart from the scale, whose undefined fields are assigned to 1.0 by default.
         </p>
 
         <p>With our current file, we have thus described that the frame_obj object is at the origin of the world.
            If you have well followed, this description could have been shortened by simply putting the entity name with no field below.
         </p>
 
-        <p>For the three other objects, they are all shifted on a different axis of the world.</p>
+        <p>For the three other objects, they are all shifted on a different axis of the world, with the frame_green object having a scale in height 3 times bigger.</p>
+
+        <h2>Using the include field</h2>
+
+        <p>It is possible to use several configuration files of this type. To do this, we can declare the "include" key: </p>
+
+        <div class="code_block xml_code" style="counter-reset:code_line 0;">
+          <div class="code_line"><span class="yaml_key">include</span>:</div>
+          <div class="code_line">    <span class="yaml_key">- <span class="yaml_string">package://overworld_tutorials/configurations/static_env.yaml</span></span></div>
+          <div class="code_line"><span class="yaml_key">frame_obj</span>:</div>
+          <div class="code_line">  <span class="yaml_key">position</span>:</div>
+          <div class="code_line">    <span class="yaml_key">x</span>: <span class="yaml_value">1.0</span></div>
+          <div class="code_line">    <span class="yaml_key">y</span>: <span class="yaml_value">0.0</span></div>
+          <div class="code_line">    <span class="yaml_key">z</span>: <span class="yaml_value">0.0</span></div>
+          <div class="code_line">  <span class="yaml_key">orientation</span>:</div>
+          <div class="code_line">    <span class="yaml_key">x</span>: <span class="yaml_value">0.0</span></div>
+          <div class="code_line">    <span class="yaml_key">y</span>: <span class="yaml_value">0.0</span></div>
+          <div class="code_line">    <span class="yaml_key">z</span>: <span class="yaml_value">0.0</span></div>
+          <div class="code_line">  <span class="yaml_key">scale</span>:</div>  
+          <div class="code_line">    <span class="yaml_key">y</span>: <span class="yaml_value">3.0</span></div>
+          <div class="code_line">    </div>
+        </div>
+
+        <p>This line will load the file pointed by the path before loading the current file. 
+          If an object is declared several times, the last declaration (i.e. that of the first file) will overwrite the previous ones.
+          For example, here, if we include the previous file "static_env.yaml" and that we use this one, static_env will be loaded first, and then frame_obj declared over there will be overwritten by this one.</p>
+
 
         <h2>The static objects perception module</h2>
 

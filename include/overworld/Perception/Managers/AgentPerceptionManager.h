@@ -18,7 +18,7 @@ public:
 protected:
   std::map<std::string, Agent*> agents_;
 
-  Agent* getAgent(const std::string& agent_name, AgentType_e type);
+  Agent* getAgent(const std::string& agent_name, AgentType_e type, bool auto_create = true);
 
   std::map<std::string, Agent*>::iterator createAgent(const std::string& name, AgentType_e type);
   Agent* updateAgent(BodyPart* body_part, AgentType_e type);
