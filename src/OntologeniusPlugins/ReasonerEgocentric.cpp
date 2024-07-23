@@ -28,8 +28,8 @@ bool ReasonerEgocentric::preReason(const QueryInfo_t& query_info)
   if((query_info.query_origin == query_origin_individual) &&
      (query_info.query_type == query_relation))
   {
-    ObjectPropertyBranch_t* property_ptr = nullptr;
-    std::set<ObjectPropertyBranch_t*> to_compute_properties;
+    ObjectPropertyBranch* property_ptr = nullptr;
+    std::set<ObjectPropertyBranch*> to_compute_properties;
     if(query_info.predicate != "")
     {
       property_ptr = isComputableProperty(query_info.predicate);
@@ -39,7 +39,7 @@ bool ReasonerEgocentric::preReason(const QueryInfo_t& query_info)
 
     if(query_info.subject != "")
     {
-      std::set<ObjectPropertyBranch_t*> valid_properties = isInDomain(query_info.subject, property_ptr);
+      std::set<ObjectPropertyBranch*> valid_properties = isInDomain(query_info.subject, property_ptr);
       if(valid_properties.size() == 0)
         return false;
       to_compute_properties = valid_properties;
@@ -48,7 +48,7 @@ bool ReasonerEgocentric::preReason(const QueryInfo_t& query_info)
 
     if(query_info.object != "")
     {
-      std::set<ObjectPropertyBranch_t*> valid_properties = isInRange(query_info.object, property_ptr);
+      std::set<ObjectPropertyBranch*> valid_properties = isInRange(query_info.object, property_ptr);
       if(valid_properties.size() == 0)
         return false;
 
@@ -56,7 +56,7 @@ bool ReasonerEgocentric::preReason(const QueryInfo_t& query_info)
         to_compute_properties = valid_properties;
       else
       {
-        std::set<ObjectPropertyBranch_t*> intersection;
+        std::set<ObjectPropertyBranch*> intersection;
         std::set_intersection(to_compute_properties.begin(), to_compute_properties.end(),
                               valid_properties.begin(), valid_properties.end(),
                               std::inserter(intersection, intersection.begin()));
@@ -70,7 +70,7 @@ bool ReasonerEgocentric::preReason(const QueryInfo_t& query_info)
     if(to_compute_properties.size() == 0)
     {
       if(property_ptr != nullptr)
-      to_compute_properties.insert(property_ptr);
+        to_compute_properties.insert(property_ptr);
       else
         return false;
     }
@@ -97,7 +97,7 @@ std::string ReasonerEgocentric::getDescription()
   return "This reasoner is provided by Overworld. It computes egocentric relations on query demand.";
 }
 
-ObjectPropertyBranch_t* ReasonerEgocentric::isComputableProperty(const std::string& property)
+ObjectPropertyBranch* ReasonerEgocentric::isComputableProperty(const std::string& property)
 {
   auto property_ptr = ontology_->object_property_graph_.findBranch(property);
   if(property_ptr != nullptr)
@@ -112,13 +112,13 @@ ObjectPropertyBranch_t* ReasonerEgocentric::isComputableProperty(const std::stri
   return nullptr;
 }
 
-std::set<ObjectPropertyBranch_t*> ReasonerEgocentric::isInRange(const std::string& indiv, ObjectPropertyBranch_t* property)
+std::set<ObjectPropertyBranch*> ReasonerEgocentric::isInRange(const std::string& indiv, ObjectPropertyBranch* property)
 {
   auto indiv_ptr = ontology_->individual_graph_.findBranch(indiv);
   if(indiv_ptr == nullptr)
     return {};
 
-  std::unordered_set<ClassBranch_t*> types;
+  std::unordered_set<ClassBranch*> types;
   ontology_->individual_graph_.getUpPtr(indiv_ptr, types);
   if(property != nullptr)
   {
@@ -133,7 +133,7 @@ std::set<ObjectPropertyBranch_t*> ReasonerEgocentric::isInRange(const std::strin
   }
   else
   {
-    std::set<ObjectPropertyBranch_t*> res;
+    std::set<ObjectPropertyBranch*> res;
     for(auto computable_property : computable_properties_)
     {
       if(computable_property->ranges_.size() == 0)
@@ -151,13 +151,13 @@ std::set<ObjectPropertyBranch_t*> ReasonerEgocentric::isInRange(const std::strin
   }
 }
 
-std::set<ObjectPropertyBranch_t*> ReasonerEgocentric::isInDomain(const std::string& indiv, ObjectPropertyBranch_t* property)
+std::set<ObjectPropertyBranch*> ReasonerEgocentric::isInDomain(const std::string& indiv, ObjectPropertyBranch* property)
 {
   auto indiv_ptr = ontology_->individual_graph_.findBranch(indiv);
   if(indiv_ptr == nullptr)
     return {};
 
-  std::unordered_set<ClassBranch_t*> types;
+  std::unordered_set<ClassBranch*> types;
   ontology_->individual_graph_.getUpPtr(indiv_ptr, types);
   if(property != nullptr)
   {
@@ -172,7 +172,7 @@ std::set<ObjectPropertyBranch_t*> ReasonerEgocentric::isInDomain(const std::stri
   }
   else
   {
-    std::set<ObjectPropertyBranch_t*> res;
+    std::set<ObjectPropertyBranch*> res;
     for(auto computable_property : computable_properties_)
     {
       if(computable_property->domains_.size() == 0)
@@ -190,7 +190,7 @@ std::set<ObjectPropertyBranch_t*> ReasonerEgocentric::isInDomain(const std::stri
   }
 }
 
-overworld::GetRelations ReasonerEgocentric::createRequest(const std::string& subject, const std::set<ObjectPropertyBranch_t*>& predicates, const std::string& object)
+overworld::GetRelations ReasonerEgocentric::createRequest(const std::string& subject, const std::set<ObjectPropertyBranch*>& predicates, const std::string& object)
 {
   overworld::GetRelations srv;
 
@@ -199,7 +199,7 @@ overworld::GetRelations ReasonerEgocentric::createRequest(const std::string& sub
   {
     overworld::Triplet pattern;
     pattern.subject = subject;
-    pattern.predicate = predicate->value();
+    pattern.predicate = predicate->value(); // crash
     pattern.object = object;
     srv.request.patterns.push_back(pattern);
   }
@@ -225,19 +225,21 @@ void ReasonerEgocentric::updateOntology(const std::vector<overworld::Triplet>& t
 {
   for(auto& triplet : to_delete)
   {
+    std::cout << "to del : " << triplet.subject << " " << triplet.predicate << " " << triplet.object << std::endl;
     ontology_->individual_graph_.removeRelation(triplet.subject, triplet.predicate, triplet.object);
-    nb_update_++;
+    nb_update++;
   }
 
   for(auto& triplet : to_add)
   {
+    std::cout << "to add : " << triplet.subject << " " << triplet.predicate << " " << triplet.object << std::endl;
     auto branch = ontology_->individual_graph_.findBranch(triplet.subject);
     if(branch != nullptr)
     {
       try
-    {
-      ontology_->individual_graph_.addRelation(branch, triplet.predicate, triplet.object);
-      nb_update_++;
+      {
+        ontology_->individual_graph_.addRelation(branch, triplet.predicate, triplet.object);
+        nb_update++;
       }
       catch(const std::exception& e)
       {
