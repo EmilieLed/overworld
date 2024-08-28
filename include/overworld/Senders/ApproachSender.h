@@ -64,6 +64,23 @@ private:
   void fillNode(LogicalAlgebraNode& node, std::string constraint, const std::unordered_map<std::string, LogicalAlgebraNode>& braquet_nodes);
   size_t getIn(size_t begin, std::string& in_text, const std::string& text, char symbol_in, char symbol_out);
   std::vector<std::string> split(const std::string& text, const std::string& delim);
+  Pose findBestApproachPoint(Object* target_object,Area valid_area);
+
+  Pose calculateMidPointBetweenTwoPoints(Pose p1,Pose p2);
+
+  std::vector<Pose> drawRectangleAtDistance(Pose p1,Pose p2,Pose p3,Pose p4,double d);
+
+  std::vector<Pose> getApproachPoints(Object* object);
+
+  std::vector<Pose> applyConstraint(Area valid_area, const std::vector<Pose>&approach_points);
+
+  Pose getNearestPoint(const Pose& pose_object, const std::vector<Pose>& valid_poses);
+
+
+  bool isOverlappingOnZ(Object* object_a, Object* object_b);
+  bool overlapXY(Object* object_a, Object* object_b);
+  Object* findSupport (Object* target_object);
+  double getLowerFaceSurface(Object* object);
 };
 
 } // namespace owds

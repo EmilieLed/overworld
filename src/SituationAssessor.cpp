@@ -90,6 +90,7 @@ SituationAssessor::SituationAssessor(const std::string& agent_name,
   if(is_robot_)
   {
     objetcs_pose_sender_ = new PoseSender(&n_, perception_manager_.objects_manager_);
+    approach_sender_ = new ApproachSender(&n_, &perception_manager_);
     bernie_sender_ =  new BernieSenders(&n_);
   }
   else
